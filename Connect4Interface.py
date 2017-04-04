@@ -2,6 +2,7 @@
 #Connect 4 Project
 
 #testing git 040317
+#testing git edit from browser 040317 1834
 
 #initialize the game board
 board=[
