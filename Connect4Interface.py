@@ -1,6 +1,8 @@
 #SJSU CS156 -Spring 2017
 #Connect 4 Project
 
+#testing git 040317
+
 #initialize the game board
 board=[
         [0,0,0,0,0,0,0],
