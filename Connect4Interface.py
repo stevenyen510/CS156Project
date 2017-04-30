@@ -9,7 +9,8 @@ class Connect4Game:
                     [0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]
 
     def run_game(self):
-        """This function launches the game. Function to check for winner needs to be implemented!"""
+        """This function launches the game. Function to check for diagonal 4 in a row
+        needs to be implemented."""
         
         quit = False
         print "Game begins:"
@@ -17,10 +18,14 @@ class Connect4Game:
         
         ## Player 1  
             show_board(self.board)
-            
+
+            #check if there's a winner
+            if(player_won(self.board)):
+                print "Game ended."
+                break;  
+                                        
             #check if board is full
             if(is_full(self.board)):
-                quit = True;
                 print "The board is full!"
                 break;
             
@@ -39,13 +44,17 @@ class Connect4Game:
                     break
                 i=i+1
             self.board[i-1][col]=1
-                
+                            
         ## Player 2    
             show_board(self.board)
             
+            #check if there's a winner
+            if(player_won(self.board)):
+                print "Game ended."
+                break;            
+            
             #check if board is full
             if(is_full(self.board)):
-                quit = True;
                 print "The board is full!"
                 break;
         
@@ -117,6 +126,52 @@ def show_board(currentBoard):
     print " 0  1  2  3  4  5  6 <--Col Number"
     print
 
+def player_won(currentBoard):
+    """Checks if there's a winner in the current board"""
+    if(check_columns(currentBoard)): return True
+    if(check_rows(currentBoard)): return True
+    if(check_diagonal(currentBoard)): return True  #check_diagonal() needs to be implemented
 
+def check_columns(currentBoard):
+    """Check columns for vertical 4 in a row
+    @return True if there's a vertical 4 in a row. False if not"""   
+    for c in range(7):
+        if (currentBoard[5][c]!=0):
+            currNumb = currentBoard[5][c]
+            consecCount = 1
+            for r in range(4,-1,-1): #r in 4, 3, 2, 1, 0
+                if(currentBoard[r][c]==0):
+                    break
+                elif(currentBoard[r][c]==currNumb):
+                    consecCount+=1
+                    if(consecCount==4):
+                        print "Vertical 4 in a row. Player %s has won!" % currNumb
+                        return True
+                elif(currentBoard[r][c]!=currNumb):
+                    consecCount=1 #reset count
+                    currNumb=currentBoard[r][c]
+    return False
+    
+def check_rows(currentBoard):
+    """Check rows for horizontal 4 in a row
+    @return True if there's a horizontal 4 in a row. False if not"""
+    for row in range(6):
+        for col in range(4): #col in 0,1,2,3
+            consec4s = [currentBoard[row][col],currentBoard[row][col+1],currentBoard[row][col+2],currentBoard[row][col+3]]
+            if((0 not in consec4s) and (sum(consec4s)==4)):
+                #indicating that there were four (1) in a row
+                print "Horizontal 4 in a row. Player 1 has won!"
+                return True
+            elif((0 not in consec4s) and (sum(consec4s)==8)):
+                print "Horizontal 4 in a row. Player 2 has won!"
+                return True
+    return False
+    
+def check_diagonal(currentBoard):
+    """Check diagonals (both ascending and descending) for 4 in a row
+    @return True if there's a diagonal 4 in a row. False if not"""
+    #THIS STILL NEEDS TO BE IMPLEMENTED.
+    return False
+            
 game1 = Connect4Game()
 game1.run_game()
