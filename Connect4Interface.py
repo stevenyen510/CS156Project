@@ -9,8 +9,7 @@ class Connect4Game:
                     [0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]
 
     def run_game(self):
-        """This function launches the game. Function to check for winner or a
-        full game board still needs to be implemented"""
+        """This function launches the game. Function to check for winner needs to be implemented!"""
         
         quit = False
         print "Game begins:"
