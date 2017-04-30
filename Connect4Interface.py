@@ -19,6 +19,12 @@ class Connect4Game:
         ## Player 1  
             show_board(self.board)
             
+            #check if board is full
+            if(is_full(self.board)):
+                quit = True;
+                print "The board is full!"
+                break;
+            
             #confirm the move is valid. Re-ask user for input until valid entry.
             input_valid = False
             while(not input_valid):
@@ -37,6 +43,12 @@ class Connect4Game:
                 
         ## Player 2    
             show_board(self.board)
+            
+            #check if board is full
+            if(is_full(self.board)):
+                quit = True;
+                print "The board is full!"
+                break;
         
             #confirm the move is valid. Re-ask user for input until valid entry.
             input_valid = False
@@ -70,7 +82,14 @@ class Connect4Game:
         col = input("Enter the column (0-indexed) to place disc in:")
         return col
         
-    
+
+def is_full(currentBoard):
+    """This function returns true if board is full. False if not full"""
+    for i in range(6):
+        if(0 in currentBoard[i]):
+            return False
+    return True
+         
 def is_move_valid(proposedMove,currentBoard):
     """This function checks whether the proposedMove is valid for currentBoard
     @param proposedMove: an integer indicating column to place the disc in [0,1,..6].
