@@ -2,6 +2,9 @@
 #Connect 4 Project
 
 class Connect4Game:
+    """This class administers the game. Game currently asks users for input
+    for each move. To implement AI, redefine the method p2_next_move(). p1_next_move()
+    could stay the same, prompting human player to select move."""
 
     def __init__(self):
         """Constructor that initializes an empty board"""
@@ -9,8 +12,7 @@ class Connect4Game:
                     [0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]
 
     def run_game(self):
-        """This function launches the game. Function to check for diagonal 4 in a row
-        needs to be implemented."""
+        """This function launches the game."""
         
         quit = False
         print "Game begins:"
@@ -25,7 +27,7 @@ class Connect4Game:
                 break;  
                                         
             #check if board is full
-            if(is_full(self.board)):
+            if(board_full(self.board)):
                 print "The board is full!"
                 break;
             
@@ -54,7 +56,7 @@ class Connect4Game:
                 break;            
             
             #check if board is full
-            if(is_full(self.board)):
+            if(board_full(self.board)):
                 print "The board is full!"
                 break;
         
@@ -89,9 +91,10 @@ class Connect4Game:
         @return the next move as an integer representing column number"""
         col = input("Enter the column (0-indexed) to place disc in:")
         return col
-        
 
-def is_full(currentBoard):
+#below functions are global so they can be used in other classes too.
+
+def board_full(currentBoard):
     """This function returns true if board is full. False if not full"""
     for i in range(6):
         if(0 in currentBoard[i]):
@@ -130,7 +133,7 @@ def player_won(currentBoard):
     """Checks if there's a winner in the current board"""
     if(check_columns(currentBoard)): return True
     if(check_rows(currentBoard)): return True
-    if(check_diagonal(currentBoard)): return True  #check_diagonal() needs to be implemented
+    if(check_diagonal(currentBoard)): return True
 
 def check_columns(currentBoard):
     """Check columns for vertical 4 in a row
@@ -170,7 +173,33 @@ def check_rows(currentBoard):
 def check_diagonal(currentBoard):
     """Check diagonals (both ascending and descending) for 4 in a row
     @return True if there's a diagonal 4 in a row. False if not"""
-    #THIS STILL NEEDS TO BE IMPLEMENTED.
+    #Check diagonals going down to right.
+    for row in [0,1,2]:
+        for col in range(4):
+            if(currentBoard[row][col]!=0): #no point checking consecutive 0's
+                consec4disc = True
+                for i in range(1,4):
+                    if(currentBoard[row][col]!=currentBoard[row+i][col+i]):
+                        consec4disc = False
+                        break
+                if(consec4disc==True):
+                    print "Player %s has won!" % currentBoard[row][col]
+                    return True  #return from this functions check_diagonal
+    
+    #Check diagonals going up to right.
+    for row in [3,4,5]:
+        for col in range(4):
+            if(currentBoard[row][col]!=0): #no point checking consecutive 0's
+                consec4disc = True
+                for i in range(1,4):
+                    if(currentBoard[row][col]!=currentBoard[row-i][col+i]):
+                        consec4disc = False
+                        break
+                if(consec4disc==True):
+                    print "Player %s has won!" % currentBoard[row][col]
+                    return True  #return from this function check_diagonal
+    
+    #if by this point no diagonal 4 in a row found, then there are none.            
     return False
             
 game1 = Connect4Game()
