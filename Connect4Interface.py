@@ -22,7 +22,7 @@ class Connect4Game:
             show_board(self.board)
 
             #check if there's a winner
-            if(player_won(self.board)):
+            if(player_won(self.board)!=0):
                 print "Game ended."
                 break;  
                                         
@@ -51,7 +51,7 @@ class Connect4Game:
             show_board(self.board)
             
             #check if there's a winner
-            if(player_won(self.board)):
+            if(player_won(self.board)!=0):
                 print "Game ended."
                 break;            
             
@@ -130,61 +130,84 @@ def show_board(currentBoard):
     print
 
 def player_won(currentBoard):
-    """Checks if there's a winner in the current board"""
-    if(check_columns(currentBoard)): return True
-    if(check_rows(currentBoard)): return True
-    if(check_diagonal(currentBoard)): return True
+    """Checks if there's a winner in the current board
+    @param currentBoard a list of list of 0,1,2 representing the board state.
+    @returns an integer 1, if player #1 won; 2, if player #2 won; 0, if no one won"""
+    
+    colWinner = check_columns(currentBoard) #returns 0 if no winner (caching output in variable)
+    if(colWinner!=0): 
+        print "Player %s won, vertical 4 in a row" % colWinner
+        return colWinner
 
+    rowWinner = check_rows(currentBoard) #returns 0 if no winner
+    if(rowWinner!=0): 
+        print "Player %s won, horizontal 4 in a row" % rowWinner
+        return rowWinner
+
+    diagWinner = check_diagonal(currentBoard) #return 0 if no winner 
+    if(diagWinner!=0): 
+        print "Player %s won, diagonal 4 in a row" % diagWinner
+        return diagWinner
+    
+    #if it reaches this point, then no col, row, or diag winner
+    return 0
+    
 def check_columns(currentBoard):
     """Check columns for vertical 4 in a row
-    @return True if there's a vertical 4 in a row. False if not"""   
+    @return integer 1, if player #1 won; 2, if player #2 won; 0, if no one won"""   
     for c in range(7):
-        if (currentBoard[5][c]!=0):
-            currNumb = currentBoard[5][c]
-            consecCount = 1
+        if (currentBoard[5][c]!=0): #indicating the column is not empty. No point checking empty col
+            currNumb = currentBoard[5][c] #store current location disc type "1" or "2"
+            consecCount = 1 
             for r in range(4,-1,-1): #r in 4, 3, 2, 1, 0
                 if(currentBoard[r][c]==0):
-                    break
+                    break #rest of the column is empty, no point continue checking if no 4-in-a-row yet
                 elif(currentBoard[r][c]==currNumb):
                     consecCount+=1
                     if(consecCount==4):
-                        print "Vertical 4 in a row. Player %s has won!" % currNumb
-                        return True
+                        #print "Vertical 4 in a row. Player %s has won!" % currNumb
+                        return currNumb
                 elif(currentBoard[r][c]!=currNumb):
-                    consecCount=1 #reset count
+                    consecCount=1 #reset count if a different player's disc encountered.
                     currNumb=currentBoard[r][c]
-    return False
+    return 0
     
 def check_rows(currentBoard):
     """Check rows for horizontal 4 in a row
-    @return True if there's a horizontal 4 in a row. False if not"""
+    @return integer 1, if player #1 won; 2, if player #2 won; 0, if no one won"""
     for row in range(6):
         for col in range(4): #col in 0,1,2,3
             consec4s = [currentBoard[row][col],currentBoard[row][col+1],currentBoard[row][col+2],currentBoard[row][col+3]]
             if((0 not in consec4s) and (sum(consec4s)==4)):
+                #4 1's in a row should sum to 4 if there are no 0's
                 #indicating that there were four (1) in a row
-                print "Horizontal 4 in a row. Player 1 has won!"
-                return True
+                #print "Horizontal 4 in a row. Player 1 has won!"
+                return 1
             elif((0 not in consec4s) and (sum(consec4s)==8)):
-                print "Horizontal 4 in a row. Player 2 has won!"
-                return True
-    return False
+                #4 2's in a row should sum to 8 if there are no 0's
+                #print "Horizontal 4 in a row. Player 2 has won!"
+                return 2
+    return 0
     
 def check_diagonal(currentBoard):
     """Check diagonals (both ascending and descending) for 4 in a row
-    @return True if there's a diagonal 4 in a row. False if not"""
+    @return integer 1, if player #1 won; 2, if player #2 won; 0, if no one won"""
     #Check diagonals going down to right.
     for row in [0,1,2]:
         for col in range(4):
             if(currentBoard[row][col]!=0): #no point checking consecutive 0's
-                consec4disc = True
+                consec4disc = True  
                 for i in range(1,4):
                     if(currentBoard[row][col]!=currentBoard[row+i][col+i]):
                         consec4disc = False
                         break
-                if(consec4disc==True):
-                    print "Player %s has won!" % currentBoard[row][col]
-                    return True  #return from this functions check_diagonal
+                        
+                #if after looping through the 3 discs after current and still haven't
+                #found one of a different type or 0 (both of which would set consec4disc to False)
+                #then we have 4 in a row.
+                if(consec4disc!=False):
+                    #print "Player %s has won!" % currentBoard[row][col]
+                    return currentBoard[row][col] 
     
     #Check diagonals going up to right.
     for row in [3,4,5]:
@@ -195,12 +218,13 @@ def check_diagonal(currentBoard):
                     if(currentBoard[row][col]!=currentBoard[row-i][col+i]):
                         consec4disc = False
                         break
-                if(consec4disc==True):
-                    print "Player %s has won!" % currentBoard[row][col]
-                    return True  #return from this function check_diagonal
+    
+                if(consec4disc!=False):
+                    #print "Player %s has won!" % currentBoard[row][col]
+                    return currentBoard[row][col]
     
     #if by this point no diagonal 4 in a row found, then there are none.            
-    return False
+    return 0
             
-game1 = Connect4Game()
-game1.run_game()
+#game1 = Connect4Game()
+#game1.run_game()

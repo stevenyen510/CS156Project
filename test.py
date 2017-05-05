@@ -22,8 +22,8 @@ class GameWithAI(Connect4Interface.Connect4Game):
         return column
         
 #print "New Game with AI"        
-#gameWithAI_1 = GameWithAI()
-#gameWithAI_1.run_game()
+gameWithAI_1 = GameWithAI()
+gameWithAI_1.run_game()
 
         
         
