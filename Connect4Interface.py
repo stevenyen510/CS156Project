@@ -36,6 +36,8 @@ class Connect4Game:
             while(not input_valid):
                 print "Player 1's turn:"
                 col = self.p1_next_move(self.board)
+                if col == 9: # 9 to quit
+                    return
                 input_valid=is_move_valid(col,self.board)
                 if(not input_valid): print "Invalid move, try again!"
             
@@ -65,6 +67,8 @@ class Connect4Game:
             while(not input_valid):
                 print "Player 2's turn:"
                 col = self.p2_next_move(self.board)
+                if col == 9: # 9 to quit
+                    return
                 input_valid=is_move_valid(col,self.board)
                 if(not input_valid): print "Invalid move, try again!"
             
@@ -81,7 +85,7 @@ class Connect4Game:
         We need to implement the logic for player 1 here. If human player, leave as is.
         @param currentBoard: current board as a list of lists
         @return the next move as an integer representing column number"""
-        col = input("Enter the column (0-indexed) to place disc in:")
+        col = input("Enter the column (0-indexed, 9 to quit) to place disc in:")
         return col
     
     def p2_next_move(self,currentBoard):
@@ -89,7 +93,7 @@ class Connect4Game:
         We need to implement the logic for player 2 (****THE AI *****) here.
         @param currentBoard: current board as a list of lists
         @return the next move as an integer representing column number"""
-        col = input("Enter the column (0-indexed) to place disc in:")
+        col = input("Enter the column (0-indexed, 9 to quit) to place disc in:")
         return col
 
 #below functions are global so they can be used in other classes too.
