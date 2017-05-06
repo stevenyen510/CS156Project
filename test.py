@@ -47,7 +47,7 @@ def eval(board, player):
     one_streak = get_streak(board, 1, player)
     """evaluation function"""
     """one_streak / 4 for clear repeat count"""
-    value = 5000 * four_streak + 500 * three_streak + 50 * two_streak + one_streak / 4
+    value = 1000 * four_streak + 100 * three_streak + 10 * two_streak + one_streak / 4
     return value
     
 def get_streak(board, number, player):
