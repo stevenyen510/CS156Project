@@ -42,12 +42,15 @@ class Connect4Game:
                 if(not input_valid): print "Invalid move, try again!"
             
             #place the disc in the board
+            """
             i=0
             while i<6:
                 if self.board[i][col]!=0:
                     break
                 i=i+1
             self.board[i-1][col]=1
+            """
+            place_disc(self.board, col, 1)
                             
         ## Player 2    
             show_board(self.board)
@@ -73,12 +76,15 @@ class Connect4Game:
                 if(not input_valid): print "Invalid move, try again!"
             
             #place the disc in the board
+            """
             i=0
             while i<6:
                 if self.board[i][col]!=0:
                     break
                 i=i+1                    
             self.board[i-1][col]= 2
+            """
+            place_disc(self.board, col, 2)
                                             
     def p1_next_move(self,currentBoard):
         """This function decides what the next move should be based on currentBoard
@@ -97,6 +103,15 @@ class Connect4Game:
         return col
 
 #below functions are global so they can be used in other classes too.
+
+def place_disc(board, col, player):
+    """place the disc in the board"""
+    i=0
+    while i<6:
+        if board[i][col]!=0:
+            break
+        i=i+1                    
+    board[i-1][col]= player
 
 def board_full(currentBoard):
     """This function returns true if board is full. False if not full"""
