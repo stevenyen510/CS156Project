@@ -22,17 +22,17 @@ class GameWithAI(Connect4Interface.Connect4Game):
         column = random.randint(0,6)
         return column
         
-    def add_board(self):
+    def add_board(self, player):
         boards = []
         for x in range(7):
             boards.append(copy.deepcopy(self.board))
             if(Connect4Interface.is_move_valid(x, boards[x])):
-                Connect4Interface.place_disc(boards[x], x, 2)
+                Connect4Interface.place_disc(boards[x], x, player)
         return boards
     
     def add_value(self, player):
         bvs = []
-        boards = self.add_board()
+        boards = self.add_board(player)
         for b in boards:
            bv = {}
            bv['b'] = b
