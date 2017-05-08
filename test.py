@@ -15,12 +15,13 @@ class GameWithAI(Connect4Interface.Connect4Game):
         print
         #column = random.randint(0,6)
         #return column
-        """depth only works with 2 for now"""
-        depth = 2
+        """depth of minimax tree"""
+        depth = 3
         player = 2
         minimax_value = minimax(self.board, player, depth)
-        board_dict = add_value(self.board, player)
-        return next(index for (index, d) in enumerate(board_dict) if d['v'] == minimax_value)
+        #board_dict = add_value(self.board, player)
+        #return next(index for (index, d) in enumerate(board_dict) if d['v'] == minimax_value)
+        return close_value(self.board, player, minimax_value)
         
 def add_board(board, player):
     """add leaf boards"""
@@ -41,6 +42,16 @@ def add_value(board, player):
         bv['v'] = eval(b, player)
         bvs.append(bv)
     return bvs
+
+def close_value(board, player, mv):
+    """closest vaule of next step"""
+    vs = []
+    boards = add_board(board, player)
+    for b in boards:
+        v = abs(mv - eval(b, player))
+        vs.append(v)
+    return vs.index(min(vs))
+    
     
 def minimax(board, player, depth):
     """return minimax value"""
@@ -63,7 +74,7 @@ def minV(board, player, depth):
     v = 99999999
     bs = add_board(board, player)
     for b in bs:
-        v = min(v, minV(b, player, depth - 1))
+        v = min(v, maxV(b, player, depth - 1))
     return v
     
 def eval(board, player):
