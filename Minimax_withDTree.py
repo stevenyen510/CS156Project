@@ -1,12 +1,16 @@
-#CS156 Spring 2017
-#Connect 4 Project
+#CS 156 Spring 2017
+#Connect 4 Project 
+#05-09-17
 
 import Connect4Interface
 #import random
-#import copy
+import copy
 
-from sklearn import tree
+from sklearn import tree #need to install Scikit Learn to import this module
 
+##Below training data an excerpt from http://archive.ics.uci.edu/ml/datasets/Connect-4
+##It is a small subset of the 67557 data points available on the website.
+##See the website and our project report/presentation for details of data transformation.
 training_data = ["b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
 "b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
 "b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
@@ -471,7 +475,8 @@ Y =[]
 
 
 #Changed the following to a setupt where human goes first. 050817 1653
-#flipped the signs. Now loss=1, win=-1
+#flipped the signs. Now loss=1, win=-1 (because in our game, human starts first)
+#AI "win" necessarily mean human "loss"
 for each_line in training_data:
     
     line_as_arr = each_line.split(',')
@@ -485,8 +490,7 @@ for each_line in training_data:
             board_rep_int[i] = 1 #second player, the AI.
         elif board_rep[i]=='b':
             board_rep_int[i] = 0
-    
-    
+      
     class_label = line_as_arr[42] #get class label "draw","loss", "win "
     
     class_label_int =0
@@ -497,29 +501,28 @@ for each_line in training_data:
     elif class_label =='draw':
         class_label_int = 0
     
-    
-    
     X.append(board_rep_int)
     Y.append(class_label_int)
     
-
-
-
-
 clf = tree.DecisionTreeClassifier()
 clf = clf.fit(X,Y)
 
-def OurBoard2TreeInput_TF(board_grid):
+def OurBoard2TreeInput_TF(currentBoard):
+    """This function converts our board representation into the same representation
+    used to train the Decision Tree Classifier Model
+    @param currentBoard the current board state where 1 is human player, 2 is AI, 0 is blank
+    @return a list of length 42 {-1,0,+1}, corresponding to the 42 slots of the board"""
+    
     TreeInputArr=[None]*42
     k=0
     for col in range(7):
         for row in [5,4,3,2,1,0]:
             
-            if(board_grid[row][col]==2):
+            if(currentBoard[row][col]==2):
                 slot_val = 1   #since ai is o
-            elif(board_grid[row][col]==1):
+            elif(currentBoard[row][col]==1):
                 slot_val =-1
-            elif(board_grid[row][col]==0):
+            elif(currentBoard[row][col]==0):
                 slot_val =0
             
             
@@ -527,26 +530,29 @@ def OurBoard2TreeInput_TF(board_grid):
             k+=1
     
     return TreeInputArr
-       
-         
-                
-                        
-                                
+                               
+###############################################################################                                
 #################stuff above for decision tree.                                        
 ###############################################################################                                                                                                                                                             
                                                                                                                                 
-class GameWithDTreeAI(Connect4Interface.Connect4Game):                      
+class GameWithDTreeAI(Connect4Interface.Connect4Game):
+    """Derived class of the Connect4Game class on Connect4Interface.py module
+    simply overrides the single function p2_next_move() so it uses the Minimax
+    algorithm to pick the best move"""                      
 
     def p2_next_move(self,currentBoard):
+        """Overrides this corresponding function in the parent class
+        now this method takes an a board state and initiates a Minimax algorithm
+        to help determine the move (a col number) that maximizes p2's utility value"""
         
         player = 2
-        depth = 4
+        depth = 5
         
         next_boards_utility={}
         
         for move in range(7):
             if Connect4Interface.is_move_valid(move, currentBoard):
-                copy_of_board = [x[:] for x in currentBoard] #creates copy of currentBoard
+                copy_of_board = copy.deepcopy(currentBoard) #creates copy of currentBoard
                 Connect4Interface.place_disc(copy_of_board,move,player)
                 next_boards_utility[move] = min_val(copy_of_board,1,depth-1)  #change this to opponent as player.
         
@@ -567,6 +573,7 @@ class GameWithDTreeAI(Connect4Interface.Connect4Game):
            
 
 def min_val(boardX,player,depth):
+    """Implementation of the MIN-VALUE(state) function, AIMA 3rd Ed, Fig 5.3"""
     
     if(player==1):
         opponent = 2
@@ -577,7 +584,7 @@ def min_val(boardX,player,depth):
     
     for move in range(7):
         if Connect4Interface.is_move_valid(move, boardX):
-            new_board = [x[:] for x in boardX] #creates copy of currentBoard
+            new_board = copy.deepcopy(boardX) #creates copy of currentBoard
             Connect4Interface.place_disc(new_board,move,player)
             next_boards.append(new_board)
 
@@ -592,6 +599,7 @@ def min_val(boardX,player,depth):
     return beta
     
 def max_val(boardX,player,depth):
+    """Implementation of the MAX_VALUE(state) function, AIMA 3rd Ed, Fig 5.3"""
     
     if(player==1):
         opponent = 2
@@ -602,7 +610,7 @@ def max_val(boardX,player,depth):
     
     for move in range(7):
         if Connect4Interface.is_move_valid(move, boardX):
-            new_board = [x[:] for x in boardX] #creates copy of currentBoard
+            new_board = copy.deepcopy(boardX) #creates copy of currentBoard
             Connect4Interface.place_disc(new_board,move,player)
             next_boards.append(new_board)
 
@@ -624,15 +632,17 @@ def max_val(boardX,player,depth):
         
 
 def heuristic_function(boardX,player,depth):
+    """New heuristic_function(), simply call uses the Decision Tree Classifier
+    Model trained in the begining of this code to predict the theoretical outcome
+    of the board win=+1, loss = -1, draw = 0."""
 
     if Connect4Interface.player_won(boardX)==1:
-        return -10000 - depth
+        return -10000 - depth #essentially assigning it to negative infinity.
     else:
         dtree_output = clf.predict([OurBoard2TreeInput_TF(boardX)])
         return dtree_output[0]
     
-    
-    
+            
 print "DTree Module Loaded"
 game3 = GameWithDTreeAI()
 game3.run_game()
