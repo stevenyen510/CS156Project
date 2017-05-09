@@ -1,17 +1,11 @@
+#CS156 Spring 2017
+#Connect 4 Project
+
 import Connect4Interface
 #import random
 #import copy
 
 from sklearn import tree
-#since "from" is used, the classes ABCMeta and abstractmethod can be used w/o qualifying
-
-
-CONNECT_FOUR_GRID_WIDTH = 7
-CONNECT_FOUR_GRID_HEIGHT = 6
-CONNECT_FOUR_COLORS = ["x", "o"]
-
-
-
 
 training_data = ["b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
 "b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
