@@ -546,7 +546,7 @@ class GameWithDTreeAI(Connect4Interface.Connect4Game):
     def p2_next_move(self,currentBoard):
         
         player = 2
-        depth = 5
+        depth = 4
         
         next_boards_utility={}
         
