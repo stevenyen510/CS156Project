@@ -155,17 +155,17 @@ def player_won(currentBoard):
     
     colWinner = check_columns(currentBoard) #returns 0 if no winner (caching output in variable)
     if(colWinner!=0): 
-        print "Player %s won, vertical 4 in a row" % colWinner
+        #print "Player %s won, vertical 4 in a row" % colWinner
         return colWinner
 
     rowWinner = check_rows(currentBoard) #returns 0 if no winner
     if(rowWinner!=0): 
-        print "Player %s won, horizontal 4 in a row" % rowWinner
+        #print "Player %s won, horizontal 4 in a row" % rowWinner
         return rowWinner
 
     diagWinner = check_diagonal(currentBoard) #return 0 if no winner 
     if(diagWinner!=0): 
-        print "Player %s won, diagonal 4 in a row" % diagWinner
+        #print "Player %s won, diagonal 4 in a row" % diagWinner
         return diagWinner
     
     #if it reaches this point, then no col, row, or diag winner
