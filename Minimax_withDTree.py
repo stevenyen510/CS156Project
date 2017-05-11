@@ -530,7 +530,26 @@ def OurBoard2TreeInput_TF(currentBoard):
             k+=1
     
     return TreeInputArr
-                               
+
+def OurBoard2TrainData_TF(currentBoard,cl):
+    """Converts a board represented by our convention into a string of characters
+    in the same format used by the online training data base
+    @param currentBoard: the board as a list of lists
+    @param cl: the class label to be assigned to that state as a string
+    @return a line of string in the format used by online database.
+    """
+    outputStr =""
+    for col in range(7):
+        for row in [5,4,3,2,1,0]:
+            if(currentBoard[row][col]==2):
+                outputStr+='o,'   #since ai is o
+            elif(currentBoard[row][col]==1):
+                outputStr+='x,'
+            elif(currentBoard[row][col]==0):
+                outputStr+='b,'
+    outputStr+=cl
+    return outputStr    
+                                   
 ###############################################################################                                
 #################stuff above for decision tree.                                        
 ###############################################################################                                                                                                                                                             
