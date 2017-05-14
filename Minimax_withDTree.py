@@ -1,6 +1,6 @@
 #CS 156 Spring 2017
 #Connect 4 Project 
-#05-09-17
+#05-14-17
 
 import Connect4Interface
 #import random
@@ -8,504 +8,77 @@ import copy
 
 from sklearn import tree #need to install Scikit Learn to import this module
 
-##Below training data an excerpt from http://archive.ics.uci.edu/ml/datasets/Connect-4
-##It is a small subset of the 67557 data points available on the website.
+##Training data used are from http://archive.ics.uci.edu/ml/datasets/Connect-4
 ##See the website and our project report/presentation for details of data transformation.
-training_data = ["b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,draw",
-"b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,x,o,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,draw",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,x,o,x,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,o,x,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,x,o,x,o,x,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,draw",
-"b,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,loss",
-"o,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,x,b,b,b,b,b,o,o,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,x,o,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,draw",
-"o,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,draw",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,o,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,loss",
-"o,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,win ",
-"b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,loss",
-"o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,draw",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,o,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,draw",
-"o,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,o,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,o,x,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,o,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,draw",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,draw",
-"x,o,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,draw",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,draw",
-"b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,win ",
-"o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,loss",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,o,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,x,o,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"o,o,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,o,b,b,b,b,b,b,b,b,b,b,win ",
-"o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,x,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,draw",
-"o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,draw",
-"o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,x,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,o,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,o,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,o,b,b,b,x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,o,x,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,b,b,b,b,b,o,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,o,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,x,o,x,o,b,b,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,x,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"o,b,b,b,b,b,x,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,o,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,x,o,b,b,b,b,b,b,b,b,b,b,loss",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,loss",
-"x,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,o,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,draw",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,x,o,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,o,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,o,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,x,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,b,b,b,b,x,o,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,o,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,x,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,draw",
-"o,b,b,b,b,b,o,x,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,o,x,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,b,b,b,b,b,o,o,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,o,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,draw",
-"b,b,b,b,b,b,o,o,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,loss",
-"o,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,win ",
-"o,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,win ",
-"b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,x,o,x,o,o,b,b,b,b,b,b,b,o,x,b,b,b,b,b,b,b,b,b,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,o,x,x,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,o,x,x,o,o,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,b,win ",
-"x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,o,b,o,x,b,b,b,b,draw",
-"x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,o,x,o,x,b,win ",
-"x,x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,b,b,b,b,win ",
-"x,b,b,b,b,b,o,o,x,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,win ",
-"x,o,x,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,o,draw",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,o,b,b,o,x,x,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,b,b,b,loss",
-"x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,o,x,b,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,x,x,o,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,o,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,o,x,x,x,o,b,draw",
-"x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,o,x,x,b,b,win ",
-"x,o,o,x,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,loss",
-"x,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,b,loss",
-"x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,o,x,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,o,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,b,b,b,b,b,o,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,loss",
-"x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,o,x,o,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,o,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,o,x,o,win ",
-"x,o,x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,loss",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,o,o,x,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,o,win ",
-"x,o,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,win ",
-"x,x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,o,x,b,b,win ",
-"x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,o,o,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,o,b,b,b,b,b,b,b,b,o,x,x,b,b,b,win ",
-"x,o,x,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,loss",
-"x,o,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,o,x,b,draw",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,x,o,b,loss",
-"x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,o,x,b,win ",
-"x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,o,x,x,o,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,o,draw",
-"x,x,o,o,x,b,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,loss",
-"x,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,draw",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,o,x,loss",
-"x,o,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,o,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,o,win ",
-"x,o,o,o,x,b,x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,o,o,x,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,o,x,x,o,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,b,loss",
-"x,o,x,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,draw",
-"x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,o,o,x,b,win ",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,x,o,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,x,b,b,draw",
-"x,x,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,x,o,b,win ",
-"x,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,win ",
-"x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,o,b,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,o,x,x,b,b,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,o,draw",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,win ",
-"x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,b,b,draw",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,x,o,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,o,x,o,x,x,b,draw",
-"x,o,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,loss",
-"x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,o,o,b,win ",
-"x,o,o,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,draw",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,x,o,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,loss",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,x,o,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,win ",
-"x,o,o,x,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,draw",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,o,x,b,loss",
-"x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,loss",
-"x,b,b,b,b,b,o,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,x,b,b,b,b,draw",
-"x,o,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,loss",
-"x,o,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,loss",
-"x,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,o,b,b,win ",
-"x,x,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,x,b,b,loss",
-"x,o,x,o,x,x,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,loss",
-"x,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,draw",
-"x,x,o,x,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,loss",
-"x,o,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,x,b,b,b,b,win ",
-"x,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,b,b,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,o,x,x,x,o,b,draw",
-"x,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,o,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,o,x,draw",
-"x,x,o,o,x,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,draw",
-"x,o,o,o,x,b,b,b,b,b,b,b,x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,o,o,x,x,b,o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,win ",
-"x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,win ",
-"x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,b,b,b,win ",
-"x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,o,b,win ",
-"x,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,o,x,x,b,draw",
-"x,o,o,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,win ",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,o,win ",
-"x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,o,b,b,x,b,b,b,b,b,b,b,b,b,b,b,win ",
-"x,x,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,o,b,win ",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,o,x,x,o,b,b,b,b,b,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,x,o,b,b,b,b,b,b,b,win ",
-"x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,o,b,win ",
-"x,x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,o,x,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,b,b,b,b,b,b,win ",
-"x,x,o,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,x,b,b,draw",
-"x,o,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,b,draw",
-"x,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,o,b,b,win ",
-"x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,x,o,b,win ",
-"x,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,x,o,b,draw",
-"x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,win ",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,o,draw",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,o,b,win ",
-"x,o,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,x,b,draw",
-"x,o,x,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,b,b,b,draw",
-"x,x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,o,b,b,win ",
-"x,x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,win ",
-"x,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,o,x,x,o,o,b,win ",
-"x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,win ",
-"x,o,o,o,x,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,b,b,b,b,b,b,draw",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,x,o,b,draw",
-"x,x,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,draw",
-"x,o,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,draw",
-"x,x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,o,b,b,draw",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,o,x,loss",
-"x,o,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,draw",
-"x,x,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,b,b,b,b,b,b,win ",
-"x,b,b,b,b,b,o,o,x,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,draw",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,b,b,b,b,b,b,draw",
-"x,b,b,b,b,b,o,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,o,x,b,b,win ",
-"x,o,b,b,b,b,o,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,loss",
-"x,x,o,b,b,b,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,o,b,b,b,win ",
-"x,b,b,b,b,b,o,o,x,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,loss",
-"x,x,o,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,draw",
-"x,x,x,o,o,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,draw",
-"x,x,o,o,x,b,o,o,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,draw",
-"x,x,x,o,o,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,x,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,b,b,b,loss",
-"x,x,o,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,o,b,b,b,win ",
-"x,o,b,b,b,b,o,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,loss",
-"x,b,b,b,b,b,o,o,o,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,win ",
-"x,x,x,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,draw",
-"x,b,b,b,b,b,o,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,draw",
-"x,x,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,win ",
-"x,b,b,b,b,b,o,o,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,b,b,b,b,loss",
-"x,b,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,x,o,b,loss",
-"x,o,b,b,b,b,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,o,b,b,win ",
-"x,x,o,x,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,loss",
-"x,o,x,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,loss",
-"x,b,b,b,b,b,o,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,b,b,b,loss",
-"x,x,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,b,b,win ",
-"x,o,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,o,b,b,loss",
-"x,b,b,b,b,b,o,o,x,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,loss",
-"x,x,o,x,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,draw",
-"x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,o,x,b,draw",
-"x,x,o,o,x,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,x,o,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,b,b,b,b,b,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,o,x,x,o,x,b,draw",
-"x,x,o,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,loss",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,o,b,win ",
-"x,x,o,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,loss",
-"x,x,b,b,b,b,o,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,draw",
-"x,x,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,o,x,b,win ",
-"x,x,o,x,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,x,o,b,loss",
-"x,x,x,o,o,b,o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,x,o,x,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,loss",
-"x,x,o,x,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,loss",
-"x,x,o,x,x,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,loss",
-"x,x,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,b,b,b,b,b,b,loss",
-"x,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,loss",
-"x,x,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,x,o,b,b,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,o,x,o,x,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,o,x,b,win ",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,o,x,b,b,b,b,draw",
-"x,x,o,x,o,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,loss",
-"x,o,b,b,b,b,o,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,loss",
-"x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,o,x,draw",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,o,x,b,b,win ",
-"x,o,x,o,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,draw",
-"x,x,x,o,b,b,o,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,x,o,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,b,b,b,loss",
-"x,x,o,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,loss",
-"x,x,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,o,x,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,o,x,draw",
-"x,x,o,x,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,loss",
-"x,o,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,x,o,b,draw",
-"x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,b,b,b,draw",
-"x,x,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,x,b,b,b,b,b,win ",
-"x,o,o,x,x,b,o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,b,b,b,b,b,o,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,loss",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,o,b,win ",
-"x,x,o,x,b,b,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,x,o,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,b,b,b,draw",
-"x,o,x,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,b,b,loss",
-"x,b,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,b,b,loss",
-"x,o,x,x,o,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,draw",
-"x,x,o,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,loss",
-"x,x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,win ",
-"x,o,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,x,o,b,draw",
-"x,x,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,x,b,b,b,b,b,loss",
-"x,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,o,x,x,b,loss",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,o,b,draw",
-"x,x,x,o,o,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,win ",
-"x,x,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,b,b,b,b,loss",
-"x,x,o,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,x,o,b,b,loss",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,o,b,b,draw",
-"x,x,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,b,b,b,b,draw",
-"x,x,x,o,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,draw",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,o,x,b,draw",
-"x,x,o,x,o,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,draw",
-"x,x,o,b,b,b,o,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,o,x,x,b,draw",
-"x,x,x,o,o,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,draw",
-"x,o,x,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,b,b,loss",
-"x,o,o,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,b,b,b,draw",
-"x,x,o,x,o,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,loss",
-"x,x,o,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,loss",
-"x,x,o,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,draw",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,x,o,b,b,draw",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,o,b,b,x,b,b,b,b,b,loss",
-"x,o,o,x,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,draw",
-"x,x,o,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,loss",
-"x,x,x,o,b,b,o,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,loss",
-"x,o,x,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,b,b,draw",
-"x,x,x,o,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,draw",
-"x,x,x,o,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,b,b,b,b,loss",
-"x,x,o,o,x,b,o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,draw",
-"x,x,o,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,b,b,b,b,x,b,b,b,b,b,loss",
-"x,b,b,b,b,b,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,b,b,loss",
-"x,x,o,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,b,b,b,b,loss",
-"x,o,o,x,b,b,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,draw",
-"x,o,b,b,b,b,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,x,o,b,b,b,draw",
-"x,x,o,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,b,b,loss",
-"x,x,o,o,x,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,loss",
-"x,o,b,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,b,b,b,loss",
-"x,x,o,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,o,b,b,b,b,loss",
-"x,b,b,b,b,b,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,b,b,b,draw",
-"x,x,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,o,b,b,b,b,b,o,b,b,b,b,b,draw",
-"x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,o,x,x,x,o,b,draw",
-"x,x,o,x,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,loss",
-"x,b,b,b,b,b,o,o,x,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,b,b,b,b,b,x,b,b,b,b,b,loss",
-"x,x,o,b,b,b,o,o,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,o,b,b,b,b,loss",
-"x,x,b,b,b,b,o,x,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,o,x,b,b,b,loss",
-"x,x,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,o,x,b,draw",
-"x,x,b,b,b,b,o,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,x,o,b,b,loss",
-"x,o,b,b,b,b,o,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,o,x,o,x,x,b,draw",
-"x,o,o,o,x,b,o,b,b,b,b,b,x,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,x,b,b,b,b,b,draw"]
 
-X =[]
-Y =[]
+############## Loading training sample from file, added 051417 ##############
+def load_data_array(fileName, count):
+    """This function loads data from a file represented in the uci format
+    @param fileName: String = representing the full name of file with extension
+    @param count: int = number of data points to be loaded
+    @return returnArray: array of strings."""
+    
+    returnArray =[]
 
-
+    f = open(fileName,'r')
+    for j in range(count):
+        t_line=f.readline()
+        returnArray.append(t_line)
+        
+    f.close() #close the file to free up system resources.
+    
+    return returnArray
+    
+#############################################################################
 #Changed the following to a setupt where human goes first. 050817 1653
 #flipped the signs. Now loss=1, win=-1 (because in our game, human starts first)
 #AI "win" necessarily mean human "loss"
-for each_line in training_data:
+def seperateVariabes(dataStrArr):
+    """Takes data as a string of arrays and return two arrays in form for DTree
+    @param dataStrArr: array of strings econding board state with {x,b,o} plus cl label
+    @return tuple (xx,yy) where xx is arrary of arrays representing board state as -1,+1,0
+    yy is an arrary of -1,+1, 0 representing {loss, win, draw}
+    """
+
+    xx=[]
+    yy=[]
     
-    line_as_arr = each_line.split(',')
-    board_rep = line_as_arr[:42]  #get's string of board rep
-    
-    board_rep_int = [None]*42
-    for i in range(42):
-        if board_rep[i]=='x':
-            board_rep_int[i] = -1 #first player, the human
-        elif board_rep[i]=='o':
-            board_rep_int[i] = 1 #second player, the AI.
-        elif board_rep[i]=='b':
-            board_rep_int[i] = 0
-      
-    class_label = line_as_arr[42] #get class label "draw","loss", "win "
-    
-    class_label_int =0
-    if class_label=="win ":
-        class_label_int =-1
-    elif class_label =='loss':
-        class_label_int = 1  #signs inverted since human loss = AI win 
-    elif class_label =='draw':
-        class_label_int = 0
-    
-    X.append(board_rep_int)
-    Y.append(class_label_int)
-    
+    for each_line in dataStrArr:
+        
+        line_as_arr = each_line.split(',')
+        board_rep = line_as_arr[:42]  #get's string of board rep
+        
+        board_rep_int = [None]*42
+        for i in range(42):
+            if board_rep[i]=='x':
+                board_rep_int[i] = -1 #first player, the human
+            elif board_rep[i]=='o':
+                board_rep_int[i] = 1 #second player, the AI.
+            elif board_rep[i]=='b':
+                board_rep_int[i] = 0
+        
+        class_label = line_as_arr[42] #get class label "draw","loss", "win "
+        
+        class_label_int =0
+        if class_label=="win " or class_label=="win" or class_label =="win\n":
+            class_label_int =-1
+        elif class_label =='loss':
+            class_label_int = 1  #signs inverted since human loss = AI win 
+        elif class_label =='draw':
+            class_label_int = 0
+        
+        xx.append(board_rep_int)
+        yy.append(class_label_int)
+        
+    return (xx,yy)
+
+####################Instantiating and Traiing the DTree########################
+training_data = load_data_array("training_data.txt",500) #note this data from UCI
+#only 1st 10000 points were included to reduce size and allow upload to github
+X,Y = seperateVariabes(training_data)
 clf = tree.DecisionTreeClassifier()
 clf = clf.fit(X,Y)
+###############################################################################
 
 def OurBoard2TreeInput_TF(currentBoard):
     """This function converts our board representation into the same representation
@@ -548,8 +121,8 @@ def OurBoard2TrainData_TF(currentBoard,cl):
             elif(currentBoard[row][col]==0):
                 outputStr+='b,'
     outputStr+=cl
-    return outputStr    
-                                   
+    return outputStr
+                               
 ###############################################################################                                
 #################stuff above for decision tree.                                        
 ###############################################################################                                                                                                                                                             
@@ -557,8 +130,8 @@ def OurBoard2TrainData_TF(currentBoard,cl):
 class GameWithDTreeAI(Connect4Interface.Connect4Game):
     """Derived class of the Connect4Game class on Connect4Interface.py module
     simply overrides the single function p2_next_move() so it uses the Minimax
-    algorithm to pick the best move"""                      
-
+    algorithm to pick the best move"""
+                                                            
     def p2_next_move(self,currentBoard):
         """Overrides this corresponding function in the parent class
         now this method takes an a board state and initiates a Minimax algorithm
@@ -649,7 +222,6 @@ def max_val(boardX,player,depth):
     
     return alpha
         
-
 def heuristic_function(boardX,player,depth):
     """New heuristic_function(), simply call uses the Decision Tree Classifier
     Model trained in the begining of this code to predict the theoretical outcome
@@ -657,15 +229,24 @@ def heuristic_function(boardX,player,depth):
 
     if Connect4Interface.player_won(boardX)==1:
         return -10000 - depth #essentially assigning it to negative infinity.
+    elif Connect4Interface.player_won(boardX)==2:
+        return +10000 #essentially assining it to positive infinity. 051417
     else:
         dtree_output = clf.predict([OurBoard2TreeInput_TF(boardX)])
         return dtree_output[0]
-    
-            
+               
 print "DTree Module Loaded"
 game3 = GameWithDTreeAI()
 game3.run_game()
-    
+
+keep_playing = True
+while(keep_playing):
+    user_input = raw_input("Would you like to continue? (y/n): ")
+    if(user_input =='n'):
+        break
+    game3.run_game()
+
+
 
 
     

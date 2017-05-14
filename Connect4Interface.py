@@ -10,9 +10,19 @@ class Connect4Game:
         """Constructor that initializes an empty board"""
         self.board = [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],
                     [0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]
+        self.games_played = 0
+        self.p1_wins = 0
+        self.p2_wins = 0
+        self.games_tied =0
+        self.last_game_record =[] #this inst var is updated even if user quits
 
     def run_game(self):
         """This function launches the game."""
+        
+        self.board = [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]] #reset board
+        
+        self.last_game_record =[] #array keeping track of moves made by each player
         
         quit = False
         print "Game begins:"
@@ -23,12 +33,14 @@ class Connect4Game:
 
             #check if there's a winner
             if(player_won(self.board)!=0):
-                print "Game ended."
+                print "Winner is: ", player_won(self.board)
+                self.update_game_stats()
                 break;  
                                         
             #check if board is full
             if(board_full(self.board)):
                 print "The board is full!"
+                self.update_game_stats()
                 break;
             
             #confirm the move is valid. Re-ask user for input until valid entry.
@@ -42,14 +54,7 @@ class Connect4Game:
                 if(not input_valid): print "Invalid move, try again!"
             
             #place the disc in the board
-            """
-            i=0
-            while i<6:
-                if self.board[i][col]!=0:
-                    break
-                i=i+1
-            self.board[i-1][col]=1
-            """
+            self.last_game_record.append(col)
             place_disc(self.board, col, 1)
                             
         ## Player 2    
@@ -57,12 +62,14 @@ class Connect4Game:
             
             #check if there's a winner
             if(player_won(self.board)!=0):
-                print "Game ended."
+                print "Winner is: ", player_won(self.board)
+                self.update_game_stats()
                 break;            
             
             #check if board is full
             if(board_full(self.board)):
                 print "The board is full!"
+                self.update_game_stats()
                 break;
         
             #confirm the move is valid. Re-ask user for input until valid entry.
@@ -76,14 +83,7 @@ class Connect4Game:
                 if(not input_valid): print "Invalid move, try again!"
             
             #place the disc in the board
-            """
-            i=0
-            while i<6:
-                if self.board[i][col]!=0:
-                    break
-                i=i+1                    
-            self.board[i-1][col]= 2
-            """
+            self.last_game_record.append(col)
             place_disc(self.board, col, 2)
                                             
     def p1_next_move(self,currentBoard):
@@ -101,7 +101,28 @@ class Connect4Game:
         @return the next move as an integer representing column number"""
         col = input("Enter the column (0-indexed, 9 to quit) to place disc in:")
         return col
-
+    
+    def update_game_stats(self):
+        """This function updates the instance variables to keep track of agent
+        performance/winning rate. It is called in run_game() after the game is over
+        after a player wins or if the board is full. Not called if human terminates
+        the game by entering 9"""
+        self.games_played +=1
+        if player_won(self.board)==1:
+            self.p1_wins +=1
+        elif player_won(self.board)==2:
+            self.p2_wins +=1
+        elif player_won(self.board)==0 and board_full(self.board):
+            self.games_tied +=1
+        
+        print "Game statistics since this game board was instantiated:"
+        print "Total games played: ", self.games_played
+        print "Number of games P1 won: ", self.p1_wins
+        print "Number of games P2 won: ", self.p2_wins
+        print "Number of games tied: ", self.games_tied
+        print "Steps made by each player in most recent game:"
+        print self.last_game_record
+        
 #below functions are global so they can be used in other classes too.
 
 def place_disc(board, col, player):
