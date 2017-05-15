@@ -138,7 +138,7 @@ class GameWithDTreeAI(Connect4Interface.Connect4Game):
         to help determine the move (a col number) that maximizes p2's utility value"""
         
         player = 2
-        depth = 5
+        depth = 4
         
         next_boards_utility={}
         
@@ -232,16 +232,174 @@ def heuristic_function(boardX,player,depth):
     elif Connect4Interface.player_won(boardX)==2:
         return +10000 #essentially assining it to positive infinity. 051417
     else:
-        dtree_output = clf.predict([OurBoard2TreeInput_TF(boardX)])
-        return dtree_output[0]
-               
+        
+        #Using Linear Heuristic Based on Threats
+        return threat_heuristic(boardX,player)
+        
+        #Using DTree Heuristic
+        #dtree_output = clf.predict([OurBoard2TreeInput_TF(boardX)])
+        #return dtree_output[0]
+
+
+###############################################################################    
+#######################Added Threat Heuristic 051517 ##########################           
+print "Threat Heuristic Functions Added"
+    
+def is_a_threat(boardX,row,col,player):
+    """Check if the cell at current row,col is a threat favoring the player
+    (e.g., if a row has [0,1,1,1,2,1,2] then first cell is a 'threat' for 1)
+    See comments in code body for which cells are being checked 
+    @param boardX, the board being evaluated
+    @param row, the current cell's row
+    @param col, the current cell's col
+    @param player {1,2} the player we're evaluating
+    @return True if current cell is a threat favoring the player --051517"""
+    
+    if player==2:
+        opp = 1
+    elif player ==1:
+        opp =2
+    
+    if boardX[row][col]==0:
+        
+        for offset in [-3,-2,-1,0]:
+            #check 4 to the left from start
+            start_col = col+offset
+            horiz4s = []
+            if start_col in [0,1,2,3]:
+                horiz4s = []
+                horiz4s.append(boardX[row][start_col])
+                horiz4s.append(boardX[row][start_col+1])
+                horiz4s.append(boardX[row][start_col+2])
+                horiz4s.append(boardX[row][start_col+3])
+            else:
+                continue
+            
+            if (sum(horiz4s)==(3*player)) and (opp not in horiz4s):
+                return True
+            
+        for offset in [3,2,1,0]:
+            #check 4 above the start row
+            start_row = row+offset
+            
+            vert4s=[]
+            if start_row in [5,4,3]:
+                vert4s = []
+                vert4s.append(boardX[start_row][col]) 
+                vert4s.append(boardX[start_row-1][col])
+                vert4s.append(boardX[start_row-2][col])
+                vert4s.append(boardX[start_row-3][col])
+            else:
+                continue
+            
+            if (sum(vert4s)==(3*player)) and (opp not in vert4s):
+                return True
+                
+        for offset in [3,2,1,0]:
+            #check diag ascend going up to right
+            start_col = col+offset
+            start_row = row-offset
+            diag4s = []
+            if (start_col in [0,1,2,3]) and (start_row in [5,4,3]):
+                diag4s = []
+                diag4s.append(boardX[start_row][start_col])
+                diag4s.append(boardX[start_row-1][start_col+1])
+                diag4s.append(boardX[start_row-2][start_col+2])
+                diag4s.append(boardX[start_row-3][start_col+3])
+            else:
+                continue
+
+            if (sum(diag4s)==(3*player)) and (opp not in diag4s):
+                return True
+                
+        for offset in [3,2,1,0]:
+            #check diag desc going down to right
+            start_col = col-offset
+            start_row = row-offset
+            diag4s = []
+            if (start_col in [0,1,2,3]) and (start_row in [0,1,2]):
+                diag4s = []
+                diag4s.append(boardX[start_row][start_col])
+                diag4s.append(boardX[start_row+1][start_col+1])
+                diag4s.append(boardX[start_row+2][start_col+2])
+                diag4s.append(boardX[start_row+3][start_col+3])                
+            else:
+                continue
+                
+            if (sum(diag4s)==(3*player)) and (opp not in diag4s):
+                return True
+            
+    return False
+                    
+
+def count_even_threats(boardX,player):
+    """Return the number of even threats established by player --051517"""
+    
+    even_threats =0
+    
+    for row in [0,2,4]:
+        for col in range(7):
+            if(is_a_threat(boardX,row,col,player)):
+                even_threats+=1
+    return even_threats
+            
+def count_odd_threats(boardX,player):
+    """Return the number of odd threats established by player --051517"""
+    
+    odd_threats =0
+    
+    for row in [1,3,5]:
+        for col in range(7):
+            if(is_a_threat(boardX,row,col,player)):
+                odd_threats+=1
+                                                                                                      
+    return odd_threats                                                                    
+                                                                                                                                                                                                                                                                                                                                                                                                                                              
+def threat_array(boardX,player):
+    """Return an array of threat counts: [my_even_threats, my_odd_threats,
+    opp_even_threats, opp_odd_threats]"""
+    
+    if (player==2):
+        opp =1
+    elif (player==1):
+        opp =2
+    
+    #my threats
+    my_even_threats = count_even_threats(boardX,player)
+    my_odd_threats = count_odd_threats(boardX,player)
+    #opp threats
+    op_even_threats = count_even_threats(boardX,opp)
+    op_odd_threats = count_odd_threats(boardX,opp)
+    
+    return [my_even_threats, my_odd_threats, op_even_threats, op_odd_threats]
+                                                                                                                                                                                        
+my_even_threat_coef=1
+my_odd_threat_coef =1
+op_even_threat_coef=-1
+op_odd_threat_coef=-1
+
+def threat_heuristic(boardX,player):
+    """Linear combination function based on features"""
+    threatArr = threat_array(boardX,player)
+    
+    board_val = my_even_threat_coef*threatArr[0]
+    board_val+=my_odd_threat_coef*threatArr[1]
+    board_val+=my_even_threat_coef*threatArr[2]
+    board_val+=my_odd_threat_coef*threatArr[3]
+    
+    return  board_val
+                                
+###############################################################################    
+#######################Added Threat Heuristic above  ##########################
+
+                                                                                                                                                                                
 print "DTree Module Loaded"
 game3 = GameWithDTreeAI()
 game3.run_game()
 
 keep_playing = True
 while(keep_playing):
-    user_input = raw_input("Would you like to continue? (y/n): ")
+    user_input = raw_input("Would you like to player another game? (y/n): ")
     if(user_input =='n'):
         break
     game3.run_game()
