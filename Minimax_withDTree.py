@@ -122,6 +122,26 @@ def OurBoard2TrainData_TF(currentBoard,cl):
                 outputStr+='b,'
     outputStr+=cl
     return outputStr
+    
+def TrainData2OurRep_TF(oxbString):
+    """Takes a board encoded in o,x,b and creates a list of list in our rep"""
+    oxbArr = oxbString.split(',')
+    indx=0
+    
+    boardAsList = [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]
+    
+    for col in range(7):
+        for row in [5,4,3,2,1,0]:
+            if oxbArr[indx]=='b':    
+                boardAsList[row][col]=0
+            elif oxbArr[indx]=='x':
+                boardAsList[row][col]=1
+            elif oxbArr[indx]=='o':
+                boardAsList[row][col]=2
+            indx+=1
+            
+    return boardAsList
                                
 ###############################################################################                                
 #################stuff above for decision tree.                                        
