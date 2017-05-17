@@ -6,8 +6,8 @@ import Connect4Interface
 import random
 import copy
 import time
-
 from sklearn import tree #need to install Scikit Learn to import this module
+
 
 #####added 051617 to save board states encountered during game play############
 #filename1= "gameplay_"+time.strftime("%m%d%Y_%H%M")+".txt"
@@ -171,6 +171,11 @@ class Connect4_AI(Connect4Interface.Connect4Game):
     """Derived class of the Connect4Game class on Connect4Interface.py module
     simply overrides the single function p2_next_move() so it uses the Minimax
     algorithm to pick the best move"""
+    def set(self, gp, gt, p1, p2):
+        self.games_played = gp
+        self.games_tied = gt
+        self.p1_wins = p1
+        self.p2_wins = p2
                                                             
     def p2_next_move(self,currentBoard):
         """Overrides this corresponding function in the parent class
@@ -178,7 +183,7 @@ class Connect4_AI(Connect4Interface.Connect4Game):
         to help determine the move (a col number) that maximizes p2's utility value"""
         
         player = 2
-        depth = 4
+        depth = SEARCH_DEPTH
         
         next_boards_utility={}
         
@@ -550,7 +555,48 @@ def threat_heuristic(boardX,player):
     board_val+=my_odd_threat_coef*threatArr[3]
     
     return  board_val
-                                
+
+def load_records(game):
+    lr = open('records.txt', 'r')
+    sd = int(lr.readline())
+    tc = int(lr.readline())
+    gp = int(lr.readline())
+    gt = int(lr.readline())
+    p1 = int(lr.readline())
+    p2 = int(lr.readline())
+    game.set(gp,gt, p1, p2)
+    lr.close()
+    return sd,tc
+
+def save_records(game):
+    sr = open('records.txt', 'w')
+    g = game.__dict__
+    sr.write(str(SEARCH_DEPTH)+'\n')
+    sr.write(str(TRAINING_COUNT)+'\n')
+    #gp = g['games_tied'] + g['p1_wins'] + g['p2_wins']
+    #sr.write(str(gp)+'\n')
+    sr.write(str(g['games_played'])+'\n')
+    sr.write(str(g['games_tied'])+'\n')
+    sr.write(str(g['p1_wins'])+'\n')
+    sr.write(str(g['p2_wins'])+'\n')
+    sr.close()
+    
+game3 = Connect4_AI()
+rds = load_records(game3)
+
+SEARCH_DEPTH = rds[0]
+TRAINING_COUNT = rds[1]
+
+stats = game3.__dict__
+winning_rate = float(stats['p2_wins']) / stats['games_played']
+if winning_rate < .5 and stats['games_played'] > 10:
+    if TRAINING_COUNT <= 6000:
+        TRAINING_COUNT *= 5
+        print "AI is losing badly! Tranning data increases!"
+    else:
+        SEARCH_DEPTH += 1
+        TRAINING_COUNT = 10
+        print "AI is losing bigly! Tranning data resets and increase depth!"
 ###############################################################################    
 #######################Added Threat Heuristic above  ##########################
                                                                                                                                                                                                                                                                                                                                                 
@@ -560,7 +606,7 @@ def threat_heuristic(boardX,player):
 ##See the website and our project report/presentation for details of data transformation.
 ##training_data.txt contains data from this database.
 
-training_data = load_data_array("training_data.txt",500) #note this data from UCI
+training_data = load_data_array("training_data.txt",TRAINING_COUNT) #note this data from UCI
 #random.shuffle(training_data)
 #only 1st 10000 points were included to reduce size and allow upload to github
 #X,Y = seperateVariabes(training_data)
@@ -605,7 +651,6 @@ print "accuracy:", accuracy
 ###################################Play Game###################################
 
 print "DTree Module Loaded"
-game3 = Connect4_AI()
 game3.run_game()
 
 keep_playing = True
@@ -614,6 +659,8 @@ while(keep_playing):
     if(user_input =='n'):
         break
     game3.run_game()
+
+save_records(game3)
 
 ####close file 051617
 #f3Glob.close()    
