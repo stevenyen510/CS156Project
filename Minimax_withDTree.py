@@ -1,15 +1,17 @@
 #CS 156 Spring 2017
 #Connect 4 Project 
-#05-14-17
+#05-16-17
 
 import Connect4Interface
-#import random
+import random
 import copy
+import time
 
 from sklearn import tree #need to install Scikit Learn to import this module
 
-##Training data used are from http://archive.ics.uci.edu/ml/datasets/Connect-4
-##See the website and our project report/presentation for details of data transformation.
+#####added 051617 to save board states encountered during game play############
+#filename1= "gameplay_"+time.strftime("%m%d%Y_%H%M")+".txt"
+#f3Glob = open(filename1,'w')
 
 ############## Loading training sample from file, added 051417 ##############
 def load_data_array(fileName, count):
@@ -62,9 +64,9 @@ def seperateVariabes(dataStrArr):
         class_label_int =0
         if class_label=="win " or class_label=="win" or class_label =="win\n":
             class_label_int =-1
-        elif class_label =='loss':
+        elif class_label =='loss' or class_label=="loss\n":
             class_label_int = 1  #signs inverted since human loss = AI win 
-        elif class_label =='draw':
+        elif class_label =='draw' or class_label=="draw\n":
             class_label_int = 0
         
         xx.append(board_rep_int)
@@ -72,13 +74,30 @@ def seperateVariabes(dataStrArr):
         
     return (xx,yy)
 
-####################Instantiating and Traiing the DTree########################
-training_data = load_data_array("training_data.txt",500) #note this data from UCI
-#only 1st 10000 points were included to reduce size and allow upload to github
-X,Y = seperateVariabes(training_data)
-clf = tree.DecisionTreeClassifier()
-clf = clf.fit(X,Y)
-###############################################################################
+def trainWithFeatures(td_StrArr):
+    xx =[]
+    yy =[]
+    
+    for each_line in td_StrArr:
+        board_obx = each_line[0:83]
+        indpVar_entry = []
+        indpVar_entry.extend(winning_rows(all_winning_combinations(TrainData2OurRep_TF(board_obx))))
+        indpVar_entry.extend(threat_array(TrainData2OurRep_TF(board_obx),2))
+        #indpVar_entry is an array consisting the value of 6 features -051617
+        
+        xx.append(indpVar_entry)
+        
+        cli = each_line[84:]
+        if(cli=="win") or (cli=="win\n") or (cli=="win "):
+            yy.append(-1)
+        elif (cli=="loss") or (cli=="loss\n"):
+            yy.append(+1)
+        elif (cli=="draw") or (cli=="draw\n"):
+            yy.append(0)
+            
+    return (xx,yy)
+        
+
 
 def OurBoard2TreeInput_TF(currentBoard):
     """This function converts our board representation into the same representation
@@ -104,12 +123,11 @@ def OurBoard2TreeInput_TF(currentBoard):
     
     return TreeInputArr
 
-def OurBoard2TrainData_TF(currentBoard,cl):
+def OurBoard2TrainData_TF(currentBoard):
     """Converts a board represented by our convention into a string of characters
     in the same format used by the online training data base
     @param currentBoard: the board as a list of lists
-    @param cl: the class label to be assigned to that state as a string
-    @return a line of string in the format used by online database.
+    @return a line of string in the format used by online database (w/o cl)
     """
     outputStr =""
     for col in range(7):
@@ -120,11 +138,13 @@ def OurBoard2TrainData_TF(currentBoard,cl):
                 outputStr+='x,'
             elif(currentBoard[row][col]==0):
                 outputStr+='b,'
-    outputStr+=cl
-    return outputStr
     
+    return outputStr[:-1]
+
 def TrainData2OurRep_TF(oxbString):
-    """Takes a board encoded in o,x,b and creates a list of list in our rep"""
+    """Takes a board encoded in o,x,b and creates a list of list in our rep
+    @param oxbString: the state of the board encoded as a string of o,x,b no CL
+    """
     oxbArr = oxbString.split(',')
     indx=0
     
@@ -141,8 +161,8 @@ def TrainData2OurRep_TF(oxbString):
                 boardAsList[row][col]=2
             indx+=1
             
-    return boardAsList
-                               
+    return boardAsList                                                                                           
+                                                                                                                                                                                                                                              
 ###############################################################################                                
 #################stuff above for decision tree.                                        
 ###############################################################################                                                                                                                                                             
@@ -241,25 +261,116 @@ def max_val(boardX,player,depth):
         alpha = max(alpha, min_val(board_i,opponent, depth-1))
     
     return alpha
-        
+
+print "DTree Model Trained"        
 def heuristic_function(boardX,player,depth):
     """New heuristic_function(), simply call uses the Decision Tree Classifier
     Model trained in the begining of this code to predict the theoretical outcome
     of the board win=+1, loss = -1, draw = 0."""
 
+        
+    
     if Connect4Interface.player_won(boardX)==1:
         return -10000 - depth #essentially assigning it to negative infinity.
     elif Connect4Interface.player_won(boardX)==2:
         return +10000 #essentially assining it to positive infinity. 051417
     else:
+        allcomb = all_winning_combinations(boardX)
+        features = winning_rows(allcomb)
+        features.extend(threat_array(boardX,2))
+        #this creates an array of 6 features
         
-        #Using Linear Heuristic Based on Threats
-        return threat_heuristic(boardX,player)
+        util_val = clf2.predict([features])[0]
         
-        #Using DTree Heuristic
+        #f3Glob.write(OurBoard2TrainData_TF(boardX)+","+str(util_val)+","+str(features)+"\n")
+        
+        return util_val
+        
+        #tally = all_winning_comb_tally(allcomb)
+        #return sum(tally)        
+        
         #dtree_output = clf.predict([OurBoard2TreeInput_TF(boardX)])
         #return dtree_output[0]
+        
+        #based on thrats
+        #return threat_heuristic(boardX,2)       
+                             
 
+###############################################################################
+##############################ADDED THIS 051517 12:25 #########################
+def all_winning_combinations(boardX):
+    """Check all 69 possible 4-in-row's in the board added 051517
+    @player {1,2}, the player that's evaluating the board
+    @return and array of {+1,-1,0} if claimed by {player,opp, empty}"""
+    
+    all_comb =[]  #list of list. 69 lists each of size 4
+    
+    #enumerate winning rows
+    for row in [5,4,3,2,1,0]:
+        for col in [0,1,2,3]:    
+            consec4s =[]
+            consec4s.append(boardX[row][col])
+            consec4s.append(boardX[row][col+1])
+            consec4s.append(boardX[row][col+2])
+            consec4s.append(boardX[row][col+3])
+            all_comb.append(consec4s)
+            
+    #enumerate winning cols
+    for col in range(7):
+        for row in [5,4,3]:
+            consec4s =[]
+            consec4s.append(boardX[row][col])
+            consec4s.append(boardX[row-1][col])
+            consec4s.append(boardX[row-2][col])
+            consec4s.append(boardX[row-3][col])
+            all_comb.append(consec4s)
+            
+    #enumerate all ascending winning diags
+    for row in [5,4,3]:
+        for col in [0,1,2,3]:
+            consec4s =[]
+            consec4s.append(boardX[row][col])
+            consec4s.append(boardX[row-1][col+1])
+            consec4s.append(boardX[row-2][col+2])
+            consec4s.append(boardX[row-3][col+3])
+            all_comb.append(consec4s)
+            
+    #enumerate all descending wining diags
+    for row in [2,1,0]:
+        for col in [0,1,2,3]:
+            consec4s =[]
+            consec4s.append(boardX[row][col])
+            consec4s.append(boardX[row+1][col+1])
+            consec4s.append(boardX[row+2][col+2])
+            consec4s.append(boardX[row+3][col+3])
+            all_comb.append(consec4s)
+            
+    return all_comb
+
+def all_winning_comb_tally(all_comb):
+    """added 051517"""
+    tally_arr =[None]*69
+    for i in range(69):
+        consec4 = all_comb[i]
+        if (2 in consec4) and (1 not in consec4):
+            tally_arr[i] = +1
+        elif (1 in consec4) and (2 not in consec4):
+            tally_arr[i] = -1
+        else:
+            tally_arr[i] = 0
+    return tally_arr
+    
+def winning_rows(all_comb):
+    p1_winning_rows = 0
+    p2_winning_rows = 0
+    for i in range(69):
+        consec4 = all_comb[i]
+        if (2 in consec4) and (1 not in consec4):
+            p2_winning_rows+=1
+        elif (1 in consec4) and (2 not in consec4):
+            p1_winning_rows+=1
+    return [p1_winning_rows,p2_winning_rows]
+    
 
 ###############################################################################    
 #######################Added Threat Heuristic 051517 ##########################           
@@ -411,8 +522,57 @@ def threat_heuristic(boardX,player):
                                 
 ###############################################################################    
 #######################Added Threat Heuristic above  ##########################
+                                                                                                                                                                                                                                                                                                                                                
+####################Instantiating and Traiing the DTree########################
 
-                                                                                                                                                                                
+##Training data used are from http://archive.ics.uci.edu/ml/datasets/Connect-4
+##See the website and our project report/presentation for details of data transformation.
+##training_data.txt contains data from this database.
+
+training_data = load_data_array("training_data.txt",500) #note this data from UCI
+#random.shuffle(training_data)
+#only 1st 10000 points were included to reduce size and allow upload to github
+#X,Y = seperateVariabes(training_data)
+#clf = tree.DecisionTreeClassifier()
+#clf = clf.fit(X,Y)
+
+X2,Y2 = trainWithFeatures(training_data)
+clf2 = tree.DecisionTreeClassifier()
+clf2 = clf2.fit(X2,Y2)
+
+
+###############################################################################                
+                                
+#########################Model Verification####################################
+"""
+verificationData = load_data_array("verificationData.txt",200)
+
+vx1, vy1 = trainWithFeatures(verificationData)
+
+vdatasize=len(verificationData)
+
+misses =0 
+
+for i in range(vdatasize):
+    
+    #print verificationData[i]
+    #print "   ", clf2.predict([vx1[i]])[0], vy1[i]
+    
+    
+    if(clf2.predict([vx1[i]])[0]!=vy1[i]): 
+        misses=misses+1
+
+        
+correctPredictions = vdatasize - misses
+accuracy = float(correctPredictions)/vdatasize
+
+print "training sample size:", len(training_data)        
+print "correct:", correctPredictions
+print "out of:", vdatasize
+print "accuracy:", accuracy
+"""
+###################################Play Game###################################
+
 print "DTree Module Loaded"
 game3 = GameWithDTreeAI()
 game3.run_game()
@@ -424,7 +584,5 @@ while(keep_playing):
         break
     game3.run_game()
 
-
-
-
-    
+####close file 051617
+#f3Glob.close()    
