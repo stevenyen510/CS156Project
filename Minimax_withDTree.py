@@ -81,8 +81,8 @@ def trainWithFeatures(td_StrArr):
     for each_line in td_StrArr:
         board_obx = each_line[0:83]
         indpVar_entry = []
-        indpVar_entry.extend(winning_rows(all_winning_combinations(TrainData2OurRep_TF(board_obx))))
-        indpVar_entry.extend(threat_array(TrainData2OurRep_TF(board_obx),2))
+        indpVar_entry.extend(wr_thrts(all_winning_combinations(TrainData2OurRep_TF(board_obx))))
+        #indpVar_entry.extend(threat_array(TrainData2OurRep_TF(board_obx),2))
         #indpVar_entry is an array consisting the value of 6 features -051617
         
         xx.append(indpVar_entry)
@@ -178,7 +178,7 @@ class GameWithDTreeAI(Connect4Interface.Connect4Game):
         to help determine the move (a col number) that maximizes p2's utility value"""
         
         player = 2
-        depth = 4
+        depth = 5
         
         next_boards_utility={}
         
@@ -276,8 +276,8 @@ def heuristic_function(boardX,player,depth):
         return +10000 #essentially assining it to positive infinity. 051417
     else:
         allcomb = all_winning_combinations(boardX)
-        features = winning_rows(allcomb)
-        features.extend(threat_array(boardX,2))
+        features = wr_thrts(allcomb)
+        #features.extend(threat_array(boardX,2))
         #this creates an array of 6 features
         
         util_val = clf2.predict([features])[0]
@@ -370,7 +370,32 @@ def winning_rows(all_comb):
         elif (1 in consec4) and (2 not in consec4):
             p1_winning_rows+=1
     return [p1_winning_rows,p2_winning_rows]
+
     
+def wr_thrts(all_comb):
+    """Returns winning rows and threats as array of integers
+    Output array used as indp var for DTree for training and predicting
+    The length of the array can be changed to add features as needed -051717"""
+    p1_winning_rows = 0
+    p2_winning_rows = 0
+    p1_threats =0
+    p2_threats =0
+    
+    for i in range(69):
+        consec4 = all_comb[i]
+        if (2 in consec4) and (1 not in consec4):
+            if(sum(consec4)==6):
+                p2_threats+=1
+            else:
+                p2_winning_rows+=1
+        elif (1 in consec4) and (2 not in consec4):
+            if(sum(consec4)==3):
+                p1_threats+=1
+            else:
+                p1_winning_rows+=1
+                
+    return [p1_winning_rows,p2_winning_rows,p1_threats,p2_threats]    
+                            
 
 ###############################################################################    
 #######################Added Threat Heuristic 051517 ##########################           
@@ -544,7 +569,7 @@ clf2 = clf2.fit(X2,Y2)
 ###############################################################################                
                                 
 #########################Model Verification####################################
-"""
+
 verificationData = load_data_array("verificationData.txt",200)
 
 vx1, vy1 = trainWithFeatures(verificationData)
@@ -570,7 +595,7 @@ print "training sample size:", len(training_data)
 print "correct:", correctPredictions
 print "out of:", vdatasize
 print "accuracy:", accuracy
-"""
+
 ###################################Play Game###################################
 
 print "DTree Module Loaded"
