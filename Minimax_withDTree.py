@@ -588,15 +588,17 @@ SEARCH_DEPTH = rds[0]
 TRAINING_COUNT = rds[1]
 
 stats = game3.__dict__
-winning_rate = float(stats['p2_wins']) / stats['games_played']
-if winning_rate < .5 and stats['games_played'] > 10:
-    if TRAINING_COUNT <= 6000:
-        TRAINING_COUNT *= 5
-        print "AI is losing badly! Tranning data increases!"
-    else:
-        SEARCH_DEPTH += 1
-        TRAINING_COUNT = 10
-        print "AI is losing bigly! Tranning data resets and increase depth!"
+if stats['games_played'] != 0:
+    winning_rate = float(stats['p2_wins']) / stats['games_played']
+    if winning_rate < .5 and stats['games_played'] >= 3:
+        game3.set(0,0,0,0)
+        if TRAINING_COUNT <= 6000:
+            TRAINING_COUNT *= 10
+            print "AI is losing badly! Tranning data increases!"
+        else:
+            SEARCH_DEPTH += 1
+            TRAINING_COUNT = 10
+            print "AI is losing bigly! Tranning data resets and increase depth!"
 ###############################################################################    
 #######################Added Threat Heuristic above  ##########################
                                                                                                                                                                                                                                                                                                                                                 
