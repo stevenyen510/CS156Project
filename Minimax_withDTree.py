@@ -167,7 +167,7 @@ def TrainData2OurRep_TF(oxbString):
 #################stuff above for decision tree.                                        
 ###############################################################################                                                                                                                                                             
                                                                                                                                 
-class GameWithDTreeAI(Connect4Interface.Connect4Game):
+class Connect4_AI(Connect4Interface.Connect4Game):
     """Derived class of the Connect4Game class on Connect4Interface.py module
     simply overrides the single function p2_next_move() so it uses the Minimax
     algorithm to pick the best move"""
@@ -178,7 +178,7 @@ class GameWithDTreeAI(Connect4Interface.Connect4Game):
         to help determine the move (a col number) that maximizes p2's utility value"""
         
         player = 2
-        depth = 5
+        depth = 4
         
         next_boards_utility={}
         
@@ -281,7 +281,13 @@ def heuristic_function(boardX,player,depth):
         #this creates an array of 6 features
         
         util_val = clf2.predict([features])[0]
-        
+        if (util_val) == -1:
+            ##its theoretical loosing board. But how bad is it? some losing boards are "better"
+            sumAll = sum(all_winning_comb_tally(allcomb))
+            ##but, only use it if it is consistent with DTree prediction. Should still be losing board.
+            if(sumAll<util_val):
+                util_val=sumAll
+            
         #f3Glob.write(OurBoard2TrainData_TF(boardX)+","+str(util_val)+","+str(features)+"\n")
         
         return util_val
@@ -599,7 +605,7 @@ print "accuracy:", accuracy
 ###################################Play Game###################################
 
 print "DTree Module Loaded"
-game3 = GameWithDTreeAI()
+game3 = Connect4_AI()
 game3.run_game()
 
 keep_playing = True
