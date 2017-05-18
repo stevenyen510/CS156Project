@@ -180,7 +180,8 @@ class Connect4_AI(Connect4Interface.Connect4Game):
     def p2_next_move(self,currentBoard):
         """Overrides this corresponding function in the parent class
         now this method takes an a board state and initiates a Minimax algorithm
-        to help determine the move (a col number) that maximizes p2's utility value"""
+        to help determine the move (a col number) that maximizes p2's utility value
+        Based on AIMA text 3ed Fig. 5.3 function MINIMAX-DECISION(state)"""
         
         player = 2
         depth = SEARCH_DEPTH
@@ -197,12 +198,11 @@ class Connect4_AI(Connect4Interface.Connect4Game):
         #now next_boards_utilty is a dictionary {0: min_val, 1: min_va,.....}        
         util_max = -100000
         move_max = None #the movethat maximizes the utility value
-        moves_and_util = next_boards_utility.items() #items() returns a list of dict's (key, value) tuple pairs
         
-        for move, util_val in moves_and_util:   
-            if util_val >= util_max:
-                util_max = util_val
-                move_max = move    
+        for key in list(next_boards_utility.keys()):   
+            if next_boards_utility[key]>=util_max:
+                util_max = next_boards_utility[key]
+                move_max = key    
         
         print "AI picked:", move_max
         print "from:", next_boards_utility
@@ -228,12 +228,12 @@ def min_val(boardX,player,depth):
     if depth ==0 or len(next_boards)==0 or Connect4Interface.player_won(boardX):
         return heuristic_function(boardX,player,depth-1)
             
-    #now find the board with lowest beta value
-    beta = 10000 
+    #now find the board with lowest util value v
+    v_min = 10000 
     for board_i in next_boards:
-        beta = min(beta, max_val(board_i,opponent, depth-1))
+        v_min = min(v_min, max_val(board_i,opponent, depth-1))
         
-    return beta
+    return v_min
     
 def max_val(boardX,player,depth):
     """Implementation of the MAX_VALUE(state) function, AIMA 3rd Ed, Fig 5.3"""
@@ -255,17 +255,17 @@ def max_val(boardX,player,depth):
     if depth ==0 or len(next_boards)==0 or Connect4Interface.player_won(boardX):
         return heuristic_function(boardX, player,depth-1)
                                                                             
-    #now find the board with max alpha value
+    #now find the board with max util value v
     
     ###v <-- -infinity
-    alpha = -10000
+    v_max = -10000
     
     ###for each a in ACTIONS(state) do
     for board_i in next_boards:
         ###v<--MAX(v,MIN-VALUE(board_i)
-        alpha = max(alpha, min_val(board_i,opponent, depth-1))
+        v_max = max(v_max, min_val(board_i,opponent, depth-1))
     
-    return alpha
+    return v_max
 
 print "DTree Model Trained"        
 def heuristic_function(boardX,player,depth):
