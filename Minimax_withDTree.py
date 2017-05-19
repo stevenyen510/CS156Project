@@ -1,6 +1,6 @@
 #CS 156 Spring 2017
 #Connect 4 Project 
-#05-16-17
+#05-19-17
 
 import Connect4Interface
 import random
@@ -267,7 +267,7 @@ def max_val(boardX,player,depth):
     
     return v_max
 
-print "DTree Model Trained"        
+        
 def heuristic_function(boardX,player,depth):
     """New heuristic_function(), simply call uses the Decision Tree Classifier
     Model trained in the begining of this code to predict the theoretical outcome
@@ -410,7 +410,6 @@ def wr_thrts(all_comb):
 
 ###############################################################################    
 #######################Added Threat Heuristic 051517 ##########################           
-print "Threat Heuristic Functions Added"
     
 def is_a_threat(boardX,row,col,player):
     """Check if the cell at current row,col is a threat favoring the player
@@ -582,87 +581,87 @@ def save_records(game):
     sr.close()
     
 game3 = Connect4_AI()
-rds = load_records(game3)
 
-SEARCH_DEPTH = rds[0]
-TRAINING_COUNT = rds[1]
+while(True):
+    
+    rds = load_records(game3)
 
-stats = game3.__dict__
-if stats['games_played'] != 0:
-    winning_rate = float(stats['p2_wins']) / stats['games_played']
-    if winning_rate < .5 and stats['games_played'] >= 3:
-        game3.set(0,0,0,0)
-        if TRAINING_COUNT <= 6000:
-            TRAINING_COUNT *= 10
-            print "AI is losing badly! Tranning data increases!"
-        else:
-            SEARCH_DEPTH += 1
-            TRAINING_COUNT = 10
-            print "AI is losing bigly! Tranning data resets and increase depth!"
-###############################################################################    
-#######################Added Threat Heuristic above  ##########################
+    SEARCH_DEPTH = rds[0]
+    TRAINING_COUNT = rds[1]
+
+    stats = game3.__dict__
+    if stats['games_played'] != 0:
+        winning_rate = float(stats['p2_wins']) / stats['games_played']
+        if winning_rate < .5 and stats['games_played'] >= 3:
+            game3.set(0,0,0,0)
+            if TRAINING_COUNT <= 6000:
+                TRAINING_COUNT *= 10
+                print "AI is losing badly! Tranning data increases!"
+            else:
+                SEARCH_DEPTH += 1
+                TRAINING_COUNT = 10
+                print "AI is losing bigly! Tranning data resets and increase depth!"
                                                                                                                                                                                                                                                                                                                                                 
-####################Instantiating and Traiing the DTree########################
+    ####################Instantiating and Traiing the DTree########################
 
-##Training data used are from http://archive.ics.uci.edu/ml/datasets/Connect-4
-##See the website and our project report/presentation for details of data transformation.
-##training_data.txt contains data from this database.
+    ##Training data used are from http://archive.ics.uci.edu/ml/datasets/Connect-4
+    ##See the website and our project report/presentation for details of data transformation.
+    ##training_data.txt contains data from this database.
 
-training_data = load_data_array("training_data.txt",TRAINING_COUNT) #note this data from UCI
-#random.shuffle(training_data)
-#only 1st 10000 points were included to reduce size and allow upload to github
-#X,Y = seperateVariabes(training_data)
-#clf = tree.DecisionTreeClassifier()
-#clf = clf.fit(X,Y)
+    training_data = load_data_array("training_data.txt",TRAINING_COUNT) #note this data from UCI
+    #X,Y = seperateVariabes(training_data)
+    #clf = tree.DecisionTreeClassifier()
+    #clf = clf.fit(X,Y)
 
-X2,Y2 = trainWithFeatures(training_data)
-clf2 = tree.DecisionTreeClassifier()
-clf2 = clf2.fit(X2,Y2)
-
-
-###############################################################################                
+    X2,Y2 = trainWithFeatures(training_data)
+    clf2 = tree.DecisionTreeClassifier()
+    clf2 = clf2.fit(X2,Y2)
                                 
-#########################Model Verification####################################
+    #########################Model Verification####################################
 
-verificationData = load_data_array("verificationData.txt",200)
+    verificationData = load_data_array("verificationData.txt",200)
 
-vx1, vy1 = trainWithFeatures(verificationData)
+    vx1, vy1 = trainWithFeatures(verificationData)
 
-vdatasize=len(verificationData)
+    vdatasize=len(verificationData)
 
-misses =0 
+    misses =0 
 
-for i in range(vdatasize):
-    
-    #print verificationData[i]
-    #print "   ", clf2.predict([vx1[i]])[0], vy1[i]
-    
-    
-    if(clf2.predict([vx1[i]])[0]!=vy1[i]): 
-        misses=misses+1
-
+    for i in range(vdatasize):
         
-correctPredictions = vdatasize - misses
-accuracy = float(correctPredictions)/vdatasize
+        #print verificationData[i]
+        #print "   ", clf2.predict([vx1[i]])[0], vy1[i]
+        
+        
+        if(clf2.predict([vx1[i]])[0]!=vy1[i]): 
+            misses=misses+1
+    
+            
+    correctPredictions = vdatasize - misses
+    accuracy = float(correctPredictions)/vdatasize
+    
+    print "**********************************************************"
+    print "Decision Tree Model:"
+    print "   -Training sample size:", len(training_data)
+    print "   -Verifying model on data points from training set:"        
+    #print "     -correct:", correctPredictions
+    #print "     -out of:", vdatasize
+    print "     -Accuracy:", accuracy
 
-print "training sample size:", len(training_data)        
-print "correct:", correctPredictions
-print "out of:", vdatasize
-print "accuracy:", accuracy
+    print "   -DTree Trained and Verified."
+    print "**********************************************************"
+    print
 
-###################################Play Game###################################
+    game3.run_game()
+    save_records(game3)
 
-print "DTree Module Loaded"
-game3.run_game()
-
-keep_playing = True
-while(keep_playing):
     user_input = raw_input("Would you like to player another game? (y/n): ")
+    print
     if(user_input =='n'):
         break
-    game3.run_game()
+    
 
-save_records(game3)
+
 
 ####close file 051617
 #f3Glob.close()    

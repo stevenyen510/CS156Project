@@ -33,7 +33,7 @@ class Connect4Game:
 
             #check if there's a winner
             if(player_won(self.board)!=0):
-                print "Winner is: ", player_won(self.board)
+                print "Winner is Player ", player_won(self.board)
                 self.update_game_stats()
                 break;  
                                         
@@ -62,7 +62,7 @@ class Connect4Game:
             
             #check if there's a winner
             if(player_won(self.board)!=0):
-                print "Winner is: ", player_won(self.board)
+                print "Winner is Player ", player_won(self.board)
                 self.update_game_stats()
                 break;            
             
@@ -115,12 +115,12 @@ class Connect4Game:
         elif player_won(self.board)==0 and board_full(self.board):
             self.games_tied +=1
         
-        print "Game statistics since this game board was instantiated:"
-        print "Total games played: ", self.games_played
-        print "Number of games P1 won: ", self.p1_wins
-        print "Number of games P2 won: ", self.p2_wins
-        print "Number of games tied: ", self.games_tied
-        print "Steps made by each player in most recent game:"
+        print "Game Statistics:"
+        print "-Total games played: ", self.games_played
+        print "-Number of games P1 won: ", self.p1_wins
+        print "-Number of games P2 won: ", self.p2_wins
+        print "-Number of games tied: ", self.games_tied
+        print "-Steps made by each player in most recent game:"
         print self.last_game_record
         
 #below functions are global so they can be used in other classes too.
