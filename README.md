@@ -25,7 +25,7 @@ p1_wins
 p2_wins
 """
 starting point for AI:
-2
+3
 10
 0
 0
