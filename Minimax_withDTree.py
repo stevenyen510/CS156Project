@@ -2,7 +2,6 @@
 #Connect 4 Project 
 
 import Connect4Interface
-import random
 import copy
 from sklearn import tree #need to install Scikit Learn to import this module
 
@@ -231,7 +230,7 @@ def min_val(boardX,player,depth):
         return heuristic_function(boardX,player,depth-1)
             
     #now find the board with lowest util value v
-    v_min = 10000 # v<--  +infinity
+    v_min = 100000 # v<--  +infinity
     #for each a in ACTIONS(state) do
     for board_i in next_boards:
         v_min = min(v_min, max_val(board_i,opponent, depth-1))
@@ -261,7 +260,7 @@ def max_val(boardX,player,depth):
     #now find the board with max util value v
     
     ###v <-- -infinity
-    v_max = -10000
+    v_max = -100000
     
     ###for each a in ACTIONS(state) do
     for board_i in next_boards:
@@ -277,7 +276,7 @@ def heuristic_function(boardX,player,depth):
     of the board win=+1, loss = -1, draw = 0."""
 
     if Connect4Interface.player_won(boardX)==1:
-        return -10000 - depth #essentially assigning it to negative infinity.
+        return -10000 #essentially assigning it to negative infinity.
     elif Connect4Interface.player_won(boardX)==2:
         return +10000 #essentially assining it to positive infinity. 051417
     else:
@@ -294,16 +293,7 @@ def heuristic_function(boardX,player,depth):
             if(sumAll<util_val):
                 util_val=sumAll
         
-        return util_val
-        
-        #tally = all_winning_comb_tally(allcomb)
-        #return sum(tally)        
-        
-        #dtree_output = clf.predict([OurBoard2TreeInput_TF(boardX)])
-        #return dtree_output[0]
-        
-        #based on thrats
-        #return threat_heuristic(boardX,2)       
+        return util_val               
                              
 
 ###############################################################################
@@ -646,8 +636,6 @@ while(True):
     print "Decision Tree Model:"
     print "   -Training sample size:", len(training_data)
     print "   -Verifying model on data from verificationData.txt:"        
-    #print "     -correct:", correctPredictions
-    #print "     -out of:", vdatasize
     print "     -Accuracy:", accuracy
     print "   -DTree Trained and Verified."
     print "**********************************************************"
@@ -661,8 +649,3 @@ while(True):
     if(user_input =='n'):
         break
     
-
-
-
-####close file 051617
-#f3Glob.close()    
