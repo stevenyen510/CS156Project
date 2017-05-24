@@ -1,16 +1,10 @@
 #CS 156 Spring 2017
 #Connect 4 Project 
-#05-19-17
 
 import Connect4Interface
 import random
 import copy
 from sklearn import tree #need to install Scikit Learn to import this module
-
-
-#####added 051617 to save board states encountered during game play############
-#filename1= "gameplay_"+time.strftime("%m%d%Y_%H%M")+".txt"
-#f3Glob = open(filename1,'w')
 
 ############## Loading training sample from file, added 051417 ##############
 def load_data_array(fileName, count):
@@ -31,7 +25,6 @@ def load_data_array(fileName, count):
     return returnArray
     
 #############################################################################
-#Changed the following to a setupt where human goes first. 050817 1653
 #flipped the signs. Now loss=1, win=-1 (because in our game, human starts first)
 #AI "win" necessarily mean human "loss"
 def seperateVariabes(dataStrArr):
@@ -164,7 +157,7 @@ def TrainData2OurRep_TF(oxbString):
     return boardAsList                                                                                           
                                                                                                                                                                                                                                               
 ###############################################################################                                
-#################function above for decision tree #############################                                        
+################functions above for decision tree #############################                                        
 ###############################################################################                                                                                                                                                             
                                                                                                                                 
 class Connect4_AI(Connect4Interface.Connect4Game):
@@ -187,16 +180,16 @@ class Connect4_AI(Connect4Interface.Connect4Game):
         depth = SEARCH_DEPTH
         
         #Generate ACTIONS(s), which contains all the next moves.
-        valid_moves =[]
+        actions_set =[]
         
-        for move in range(7):
-            if Connect4Interface.is_move_valid(move, currentBoard):
-                valid_moves.append(move)
+        for action in range(7):
+            if Connect4Interface.is_move_valid(action, currentBoard):
+                actions_set.append(action)
         
         next_boards_utility={}
         
         #calculate the util_valuty associated with each move.
-        for move in valid_moves:
+        for move in actions_set:
             copy_of_board = copy.deepcopy(currentBoard) #creates copy of currentBoard
             Connect4Interface.place_disc(copy_of_board,move,player)
             next_boards_utility[move] = min_val(copy_of_board,1,depth-1) #MIN-VALUE(RESULT(state,a))
@@ -213,6 +206,7 @@ class Connect4_AI(Connect4Interface.Connect4Game):
                 move_max = key    
         
         print "AI picked:", move_max
+        print "From:", next_boards_utility
         return move_max
            
 
@@ -299,8 +293,6 @@ def heuristic_function(boardX,player,depth):
             ##but, only use it if it is consistent with DTree prediction. Should still be losing board.
             if(sumAll<util_val):
                 util_val=sumAll
-            
-        #f3Glob.write(OurBoard2TrainData_TF(boardX)+","+str(util_val)+","+str(features)+"\n")
         
         return util_val
         
@@ -650,16 +642,15 @@ while(True):
     correctPredictions = vdatasize - misses
     accuracy = float(correctPredictions)/vdatasize
     
-    print "*******************************************************"
+    print "**********************************************************"
     print "Decision Tree Model:"
     print "   -Training sample size:", len(training_data)
-    print "   -Verifying model on data points from data set:"        
+    print "   -Verifying model on data from verificationData.txt:"        
     #print "     -correct:", correctPredictions
     #print "     -out of:", vdatasize
     print "     -Accuracy:", accuracy
-
     print "   -DTree Trained and Verified."
-    print "*******************************************************"
+    print "**********************************************************"
     print
 
     game3.run_game()
