@@ -5,7 +5,6 @@
 import Connect4Interface
 import random
 import copy
-import time
 from sklearn import tree #need to install Scikit Learn to import this module
 
 
@@ -75,6 +74,7 @@ def seperateVariabes(dataStrArr):
     return (xx,yy)
 
 def trainWithFeatures(td_StrArr):
+    """Reduce the training data into independent variables containing features"""
     xx =[]
     yy =[]
     
@@ -164,7 +164,7 @@ def TrainData2OurRep_TF(oxbString):
     return boardAsList                                                                                           
                                                                                                                                                                                                                                               
 ###############################################################################                                
-#################stuff above for decision tree.                                        
+#################function above for decision tree #############################                                        
 ###############################################################################                                                                                                                                                             
                                                                                                                                 
 class Connect4_AI(Connect4Interface.Connect4Game):
@@ -186,6 +186,7 @@ class Connect4_AI(Connect4Interface.Connect4Game):
         player = 2
         depth = SEARCH_DEPTH
         
+        #Generate ACTIONS(s), which contains all the next moves.
         valid_moves =[]
         
         for move in range(7):
@@ -194,23 +195,24 @@ class Connect4_AI(Connect4Interface.Connect4Game):
         
         next_boards_utility={}
         
+        #calculate the util_valuty associated with each move.
         for move in valid_moves:
             copy_of_board = copy.deepcopy(currentBoard) #creates copy of currentBoard
             Connect4Interface.place_disc(copy_of_board,move,player)
-            next_boards_utility[move] = min_val(copy_of_board,1,depth-1) #add item to dictionary
+            next_boards_utility[move] = min_val(copy_of_board,1,depth-1) #MIN-VALUE(RESULT(state,a))
         
                 
         #now next_boards_utilty is a dictionary {0: min_val, 1: min_va,.....}        
         move_max = None #the movethat maximizes the utility value
-        util_max = -100000
+        util_max = -100000  #v <-- -infinity
         
+        #find the move from the set ACTIONS(s) that maximizes the util value
         for key in list(next_boards_utility.keys()):   
             if next_boards_utility[key]>=util_max:
                 util_max = next_boards_utility[key]
                 move_max = key    
         
         print "AI picked:", move_max
-        print "from:", next_boards_utility
         return move_max
            
 
@@ -229,12 +231,14 @@ def min_val(boardX,player,depth):
             new_board = copy.deepcopy(boardX) #creates copy of currentBoard
             Connect4Interface.place_disc(new_board,move,player)
             next_boards.append(new_board)
-
-    if depth ==0 or len(next_boards)==0 or Connect4Interface.player_won(boardX):
+    
+    #if TERMINAL-TEST(state) then return UTILITY(state)
+    if depth ==0 or Connect4Interface.player_won(boardX) or len(next_boards)==0:
         return heuristic_function(boardX,player,depth-1)
             
     #now find the board with lowest util value v
-    v_min = 10000 
+    v_min = 10000 # v<--  +infinity
+    #for each a in ACTIONS(state) do
     for board_i in next_boards:
         v_min = min(v_min, max_val(board_i,opponent, depth-1))
         
@@ -256,8 +260,8 @@ def max_val(boardX,player,depth):
             Connect4Interface.place_disc(new_board,move,player)
             next_boards.append(new_board)
 
-    ###if TERMINA-TEST(state) then return Utility(state)
-    if depth ==0 or len(next_boards)==0 or Connect4Interface.player_won(boardX):
+    ###if TERMINAL-TEST(state) then return UTILITY(state)
+    if depth ==0 or Connect4Interface.player_won(boardX) or len(next_boards)==0:
         return heuristic_function(boardX, player,depth-1)
                                                                             
     #now find the board with max util value v
@@ -278,8 +282,6 @@ def heuristic_function(boardX,player,depth):
     Model trained in the begining of this code to predict the theoretical outcome
     of the board win=+1, loss = -1, draw = 0."""
 
-        
-    
     if Connect4Interface.player_won(boardX)==1:
         return -10000 - depth #essentially assigning it to negative infinity.
     elif Connect4Interface.player_won(boardX)==2:
@@ -364,7 +366,7 @@ def all_winning_combinations(boardX):
     return all_comb
 
 def all_winning_comb_tally(all_comb):
-    """added 051517"""
+    """Detect both players winning rows feature, added 051517"""
     tally_arr =[None]*69
     for i in range(69):
         consec4 = all_comb[i]
@@ -377,6 +379,7 @@ def all_winning_comb_tally(all_comb):
     return tally_arr
     
 def winning_rows(all_comb):
+    """Counting the number of winning rows by each player"""
     p1_winning_rows = 0
     p2_winning_rows = 0
     for i in range(69):
@@ -561,6 +564,7 @@ def threat_heuristic(boardX,player):
     return  board_val
 
 def load_records(game):
+    """Loads the saved state from file"""
     lr = open('records.txt', 'r')
     sd = int(lr.readline())
     tc = int(lr.readline())
@@ -573,6 +577,7 @@ def load_records(game):
     return sd,tc
 
 def save_records(game):
+    """Save the current states to text file"""
     sr = open('records.txt', 'w')
     g = game.__dict__
     sr.write(str(SEARCH_DEPTH)+'\n')
@@ -645,16 +650,16 @@ while(True):
     correctPredictions = vdatasize - misses
     accuracy = float(correctPredictions)/vdatasize
     
-    print "**********************************************************"
+    print "*******************************************************"
     print "Decision Tree Model:"
     print "   -Training sample size:", len(training_data)
-    print "   -Verifying model on data points from training set:"        
+    print "   -Verifying model on data points from data set:"        
     #print "     -correct:", correctPredictions
     #print "     -out of:", vdatasize
     print "     -Accuracy:", accuracy
 
     print "   -DTree Trained and Verified."
-    print "**********************************************************"
+    print "*******************************************************"
     print
 
     game3.run_game()
