@@ -186,18 +186,23 @@ class Connect4_AI(Connect4Interface.Connect4Game):
         player = 2
         depth = SEARCH_DEPTH
         
-        next_boards_utility={}
+        valid_moves =[]
         
         for move in range(7):
             if Connect4Interface.is_move_valid(move, currentBoard):
-                copy_of_board = copy.deepcopy(currentBoard) #creates copy of currentBoard
-                Connect4Interface.place_disc(copy_of_board,move,player)
-                next_boards_utility[move] = min_val(copy_of_board,1,depth-1)  #change this to opponent as player.
+                valid_moves.append(move)
+        
+        next_boards_utility={}
+        
+        for move in valid_moves:
+            copy_of_board = copy.deepcopy(currentBoard) #creates copy of currentBoard
+            Connect4Interface.place_disc(copy_of_board,move,player)
+            next_boards_utility[move] = min_val(copy_of_board,1,depth-1) #add item to dictionary
         
                 
         #now next_boards_utilty is a dictionary {0: min_val, 1: min_va,.....}        
-        util_max = -100000
         move_max = None #the movethat maximizes the utility value
+        util_max = -100000
         
         for key in list(next_boards_utility.keys()):   
             if next_boards_utility[key]>=util_max:
